@@ -13,7 +13,7 @@
             background-color: #fff;
             transition: background 0.3s, color 0.3s;
         }
-        /* Remove @apply and use Tailwind classes in HTML only */
+        /* Styles for input fields */
         .input-field {
             width: 100%;
             padding: 0.75rem;
@@ -35,6 +35,7 @@
         input[type=number] {
             -moz-appearance: textfield;
         }
+        /* Styles for result fields */
         .result-field {
             width: 100%;
             padding: 0.75rem;
@@ -53,6 +54,7 @@
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        /* Dark Mode Styles */
         body.dark-mode {
             color: #fff;
             background-color: #111827;
@@ -75,7 +77,8 @@
 
 <body class="min-h-screen flex items-center justify-center p-4">
 
-    <button id="darkModeToggle" class="absolute top-4 right-4 px-4 py-2 rounded-lg bg-gray-200 text-black dark:bg-gray-700 dark:text-white border border-gray-400 dark:border-gray-600 transition-colors duration-300 z-50">🌙 Dark Mode</button>
+    <button id="darkModeToggle" class="absolute top-4 right-4 px-4 py-2 rounded-lg bg-gray-200 text-black dark:bg-gray-700 dark:text-white border border-gray-400 dark:border-gray-600 transition-colors duration-300 z-50">🌙</button>
+    
     <main id="app-container" class="w-full max-w-4xl bg-gray-100 dark:bg-gray-800/50 backdrop-blur-sm p-6 sm:p-8 rounded-2xl shadow-2xl border border-gray-300 dark:border-gray-700 fade-in">
         <header class="text-center mb-8">
             <h1 class="text-3xl sm:text-4xl font-bold tracking-tight dark:text-white text-black">CGPA Calculator</h1>
@@ -115,23 +118,24 @@
             if (enabled) {
                 document.body.classList.add('dark-mode');
                 localStorage.setItem('cgpaDarkMode', '1');
-                darkModeToggle.textContent = '☀️ Light Mode';
+                darkModeToggle.textContent = '☀️';
             } else {
                 document.body.classList.remove('dark-mode');
                 localStorage.setItem('cgpaDarkMode', '0');
-                darkModeToggle.textContent = '🌙 Dark Mode';
+                darkModeToggle.textContent = '🌙';
             }
         }
         darkModeToggle.addEventListener('click', () => {
             setDarkMode(!document.body.classList.contains('dark-mode'));
         });
-        // On load, set dark mode if previously enabled
-        if (localStorage.getItem('cgpaDarkMode') === '1' || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        // On load, set dark mode if previously enabled or if the user's system prefers it
+        if (localStorage.getItem('cgpaDarkMode') === '1' || (!localStorage.getItem('cgpaDarkMode') && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             setDarkMode(true);
         } else {
             setDarkMode(false);
         }
-    // --- UI ELEMENTS ---
+
+        // --- UI ELEMENTS ---
         const semesterGrid = document.querySelector('.grid.md\\:grid-cols-2');
         const STORAGE_KEY = 'cgpaCalculatorData';
 
@@ -139,13 +143,12 @@
         function setupApp() {
             // Generate semester input fields
             for (let i = 1; i <= 8; i++) {
-                // Added inputmode="decimal" for CGPA and inputmode="numeric" for Credits
                 const semesterHTML = `
                     <div class="grid grid-cols-2 gap-3 items-center">
-                        <label class="font-medium text-gray-300">Semester ${i}</label>
+                        <label class="font-medium text-gray-700 dark:text-gray-300">Semester ${i}</label>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="number" inputmode="decimal" id="semester${i}CGPA" placeholder="CGPA" class="input-field semester-input" data-semester="${i}" data-type="cgpa" step="0.01" min="0" max="10" style="color:inherit;background:inherit;">
-                            <input type="number" inputmode="numeric" id="semester${i}Credit" placeholder="Credits" class="input-field semester-input" data-semester="${i}" data-type="credit" step="1" min="0" style="color:inherit;background:inherit;">
+                            <input type="number" inputmode="decimal" id="semester${i}CGPA" placeholder="CGPA" class="input-field semester-input" data-semester="${i}" data-type="cgpa" step="0.01" min="0" max="10">
+                            <input type="number" inputmode="numeric" id="semester${i}Credit" placeholder="Credits" class="input-field semester-input" data-semester="${i}" data-type="credit" step="1" min="0">
                         </div>
                     </div>
                 `;
@@ -162,31 +165,22 @@
         }
 
         // --- DATA HANDLING ---
-
-        /**
-         * Loads data from localStorage and updates the UI.
-         */
         function loadDataFromLocalStorage() {
             const savedData = localStorage.getItem(STORAGE_KEY);
             if (savedData) {
                 const data = JSON.parse(savedData);
-                console.log("Loaded data from Local Storage:", data);
                 updateUI(data.semesters || {});
             } else {
-                console.log("No data found in Local Storage. Initializing.");
-                calculate(); // Calculate with empty fields initially
+                calculate(); 
             }
         }
         
-        /**
-         * Saves the current input data to localStorage.
-         */
         function saveDataToLocalStorage() {
              const dataToSave = { semesters: {} };
             for (let i = 1; i <= 8; i++) {
                 const cgpa = document.getElementById(`semester${i}CGPA`).value;
                 const credit = document.getElementById(`semester${i}Credit`).value;
-                if (cgpa || credit) { // Only save if there's some data
+                if (cgpa || credit) {
                     dataToSave.semesters[i] = {
                         cgpa: parseFloat(cgpa) || 0,
                         credit: parseFloat(credit) || 0
@@ -194,14 +188,8 @@
                 }
             }
             localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
-            console.log("Data saved to Local Storage.");
         }
 
-
-        /**
-         * Updates the input fields with data.
-         * @param {Object} semestersData - The semester data object.
-         */
         function updateUI(semestersData) {
             for (let i = 1; i <= 8; i++) {
                 const semester = semestersData[i] || {};
@@ -214,26 +202,19 @@
             calculate();
         }
 
-        /**
-         * Handles input changes, saves data, and recalculates.
-         */
         function handleInputChange() {
             saveDataToLocalStorage();
             calculate();
         }
 
-        /**
-         * Calculates the total CGPA and percentage based on the current input values.
-         */
+        // --- CALCULATION LOGIC ---
         function calculate() {
             let totalPoints = 0;
             let totalCredits = 0;
 
-            // Calculate total points and total credits for each semester
             for (let semester = 1; semester <= 8; semester++) {
                 const cgpaInput = document.getElementById(`semester${semester}CGPA`);
                 const creditInput = document.getElementById(`semester${semester}Credit`);
-
                 if (cgpaInput && creditInput) {
                     const cgpaValue = parseFloat(cgpaInput.value) || 0;
                     const creditValue = parseFloat(creditInput.value) || 0;
@@ -251,29 +232,29 @@
                 return;
             }
 
-            // Calculate total CGPA and percentage
             const totalCGPA = (totalPoints / totalCredits).toFixed(3);
             const percentage = ((totalCGPA - 0.5) * 10).toFixed(2);
 
-            // Display results
             if (totalCGPAField && percentageField) {
                 totalCGPAField.textContent = totalCGPA;
                 percentageField.textContent = percentage > 0 ? percentage + "%" : "0.00%";
-            } else {
-                console.log("Result fields not found");
             }
-        // --- COPY TO CLIPBOARD FOR RESULT BUTTONS ---
+        }
+
+        // --- COPY TO CLIPBOARD ---
         function setupCopyButtons() {
             const cgpaBtn = document.getElementById('totalCGPA');
             const percBtn = document.getElementById('percentage');
-            function copyText(text, btn, restore) {
+            
+            function copyText(text, btn, restoreCallback) {
+                // Use modern clipboard API if available
                 if (navigator.clipboard && window.isSecureContext) {
                     navigator.clipboard.writeText(text).then(() => {
                         btn.innerText = 'Copied!';
-                        setTimeout(restore, 1000);
+                        setTimeout(restoreCallback, 1000);
                     });
                 } else {
-                    // fallback for older browsers
+                    // Fallback for older browsers
                     const textarea = document.createElement('textarea');
                     textarea.value = text;
                     document.body.appendChild(textarea);
@@ -281,28 +262,32 @@
                     try {
                         document.execCommand('copy');
                         btn.innerText = 'Copied!';
-                        setTimeout(restore, 1000);
-                    } catch (e) {}
+                        setTimeout(restoreCallback, 1000);
+                    } catch (e) {
+                        console.error("Copy failed", e);
+                    }
                     document.body.removeChild(textarea);
                 }
             }
-            cgpaBtn.addEventListener('mousedown', function(e) { e.preventDefault(); });
-            percBtn.addEventListener('mousedown', function(e) { e.preventDefault(); });
-            cgpaBtn.addEventListener('click', function(e) {
+            
+            // Prevent button from staying focused after click
+            cgpaBtn.addEventListener('mousedown', (e) => e.preventDefault());
+            percBtn.addEventListener('mousedown', (e) => e.preventDefault());
+
+            cgpaBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 const val = cgpaBtn.innerText;
                 if (val && val !== 'Copied!') {
                     copyText(val, cgpaBtn, () => calculate());
                 }
             });
-            percBtn.addEventListener('click', function(e) {
+            percBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 const val = percBtn.innerText;
                 if (val && val !== 'Copied!') {
                     copyText(val, percBtn, () => calculate());
                 }
             });
-        }
         }
 
         // --- START THE APP ---
@@ -314,4 +299,3 @@
     </script>
 </body>
 </html>
-
