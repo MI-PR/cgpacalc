@@ -1,2 +1,2 @@
-# cgpacalc.github.io
+# cgpacalc
 CGPA calculator which storing values locally
